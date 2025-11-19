@@ -3,6 +3,7 @@ from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import logging
+import os
 
 # Importar blueprints
 from routes.auth import auth_bp
@@ -22,7 +23,22 @@ from models.exceptions import KairosException
 
 # Setup
 app = Flask(__name__)
-CORS(app)
+
+# CORS Configuration
+# Allow requests from frontend (both local and production)
+CORS(app, resources={
+    r"/*": {
+        "origins": [
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "https://kairos-frontend-eb6u.onrender.com",
+            "https://kairos-frontend.onrender.com"
+        ],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True
+    }
+})
 
 # Limiter
 limiter = Limiter(
