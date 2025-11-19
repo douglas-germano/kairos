@@ -20,7 +20,9 @@ from models.exceptions import (
     QuotaExceededError
 )
 from models.quota_manager import QuotaManager
+from utils.summary_generator import generate_conversation_title
 import logging
+import threading
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +116,21 @@ def send_message():
 
         # Registrar uso de quota
         QuotaManager.log_usage(tenant_id, 'api_calls_per_day', g.user_id)
+
+        # Gerar título assincronamente se for nova conversa ou tiver poucas mensagens
+        if len(messages_history) <= 2:
+            def update_title(conv_id, msgs):
+                try:
+                    new_title = generate_conversation_title(msgs)
+                    if new_title:
+                        supabase.table('conversations') \
+                            .update({'titulo': new_title}) \
+                            .eq('id', conv_id) \
+                            .execute()
+                except Exception as e:
+                    logger.error(f"Erro ao atualizar título: {e}")
+
+            threading.Thread(target=update_title, args=(conversation_id, messages_history)).start()
 
         logger.info('Message processed', extra={
             'conversation_id': conversation_id,
