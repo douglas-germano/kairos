@@ -15,7 +15,14 @@ services:
     autoDeploy: false
 
   # Frontend Service (Static Site)
-  - type: static
+  - type: web # Render uses 'web' for static sites too if env is static, OR 'static_site'
+    # Correction: Render Blueprint spec uses 'web' for web services and 'static_site' for static sites.
+    # Let's use 'web' with 'env: static' which is what I had, but 'type: static' was wrong.
+    # Actually, the error 'unknown type "static"' implies 'static' is not a valid type.
+    # Valid types are 'web', 'worker', 'pwa' (legacy), 'cron'.
+    # Wait, search result [1] says "- type: static_site".
+    # Let's try 'static_site'.
+  - type: static_site
     name: kairos-frontend
     env: static
     region: oregon
