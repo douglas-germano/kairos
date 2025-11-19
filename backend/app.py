@@ -83,6 +83,11 @@ def root():
         }
     }), 200
 
+@app.route('/favicon.ico')
+def favicon():
+    """Favicon endpoint - returns 204 No Content"""
+    return '', 204
+
 @app.route('/health', methods=['GET'])
 def health():
     """Health check endpoint"""
