@@ -1,0 +1,31 @@
+services:
+  # Backend Service
+  - type: web
+    name: kairos-backend
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: cd backend && pip install -r requirements.txt
+    startCommand: cd backend && gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.3
+      - key: FLASK_ENV
+        value: production
+    autoDeploy: false
+
+  # Frontend Service (Static Site)
+  - type: static
+    name: kairos-frontend
+    env: static
+    region: oregon
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: kairos-backend
+          property: url
+    autoDeploy: false
