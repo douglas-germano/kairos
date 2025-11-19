@@ -69,6 +69,20 @@ def handle_unexpected_exception(error):
         'code': 'INTERNAL_ERROR'
     }), 500
 
+@app.route('/', methods=['GET'])
+def root():
+    """Root endpoint - API information"""
+    return jsonify({
+        'name': 'KAIROS API',
+        'version': '1.0.0',
+        'status': 'running',
+        'endpoints': {
+            'health': '/health',
+            'api_info': '/api/v1',
+            'documentation': '/api/v1'
+        }
+    }), 200
+
 @app.route('/health', methods=['GET'])
 def health():
     """Health check endpoint"""
