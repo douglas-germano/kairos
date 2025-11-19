@@ -84,11 +84,13 @@ def send_message():
         }).execute()
 
         # Obter resposta do modelo
+        # Roteamento correto: Gemini -> Google, Llama -> Groq, Claude -> Anthropic
         if data.model and 'gemini' in data.model:
             claude_response = get_google_response(messages_history, model=data.model)
-        elif data.model and data.model not in VALID_MODELS:
+        elif data.model and 'llama' in data.model:
             claude_response = get_groq_response(messages_history, model=data.model)
         else:
+            # Claude models (opus, sonnet)
             claude_response = get_claude_response(messages_history, model=data.model)
 
         # Adicionar ao histórico
