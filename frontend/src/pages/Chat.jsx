@@ -18,7 +18,7 @@ export default function Chat() {
   const [pendingImage, setPendingImage] = useState(null)
   const messagesEndRef = useRef(null)
   const [searchParams] = useSearchParams()
-  const [model, setModel] = useState('claude-opus-4-1')
+  const [model, setModel] = useState('claude-sonnet-4-5')
 
 
   const scrollToBottom = () => {
