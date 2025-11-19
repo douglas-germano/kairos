@@ -22,7 +22,7 @@ services:
     # Valid types are 'web', 'worker', 'pwa' (legacy), 'cron'.
     # Wait, search result [1] says "- type: static_site".
     # Let's try 'static_site'.
-  - type: static_site
+  - type: web
     name: kairos-frontend
     env: static
     region: oregon
