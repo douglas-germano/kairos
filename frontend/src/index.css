@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.sound-wave{display:inline-flex;align-items:flex-end;gap:2px;height:14px}
+.sound-bar{width:3px;background:currentColor;animation:wave 1s ease-in-out infinite;border-radius:1px}
+.sound-bar:nth-child(1){animation-delay:0s}
+.sound-bar:nth-child(2){animation-delay:.1s}
+.sound-bar:nth-child(3){animation-delay:.2s}
+.sound-bar:nth-child(4){animation-delay:.3s}
+.sound-bar:nth-child(5){animation-delay:.4s}
+@keyframes wave{0%{height:4px}50%{height:14px}100%{height:4px}}
+
+.sound-wave-lg{display:inline-flex;align-items:flex-end;gap:10px;height:128px}
+.sound-bar-lg{width:12px;background:currentColor;animation:wave-lg 1s ease-in-out infinite;border-radius:5px}
+.sound-bar-lg:nth-child(1){animation-delay:0s}
+.sound-bar-lg:nth-child(2){animation-delay:.1s}
+.sound-bar-lg:nth-child(3){animation-delay:.2s}
+.sound-bar-lg:nth-child(4){animation-delay:.3s}
+.sound-bar-lg:nth-child(5){animation-delay:.4s}
+.sound-bar-lg:nth-child(6){animation-delay:.5s}
+.sound-bar-lg:nth-child(7){animation-delay:.6s}
+.sound-bar-lg:nth-child(8){animation-delay:.7s}
+.sound-bar-lg:nth-child(9){animation-delay:.8s}
+.sound-bar-lg:nth-child(10){animation-delay:.9s}
+@keyframes wave-lg{0%{height:24px}50%{height:128px}100%{height:24px}}
+
+@layer base {
+  * {
+    @apply border-neutral-border dark:border-neutral-border-dark;
+  }
+  
+  body {
+    @apply bg-neutral-light dark:bg-neutral-dark text-neutral-text dark:text-neutral-light;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer utilities {
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 300ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.animate-slideUp {
+  animation: slideUp 300ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
