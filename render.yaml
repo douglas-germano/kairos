@@ -15,18 +15,12 @@ services:
     autoDeploy: false
 
   # Frontend Service (Static Site)
-  # Frontend Service (Static Site)
   - type: web
     name: kairos-frontend
     env: static
-    region: oregon
-    plan: free
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
     envVars:
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: kairos-backend
-          property: url
+        value: https://kairos-backend.onrender.com
     autoDeploy: false
