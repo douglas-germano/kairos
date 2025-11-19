@@ -18,7 +18,7 @@ export default function Chat() {
   const [pendingImage, setPendingImage] = useState(null)
   const messagesEndRef = useRef(null)
   const [searchParams] = useSearchParams()
-  const [model] = useState('claude-opus-4-1')
+  const [model, setModel] = useState('claude-opus-4-1')
 
 
   const scrollToBottom = () => {
@@ -230,7 +230,17 @@ export default function Chat() {
     <div className="h-full flex flex-col bg-neutral-light dark:bg-neutral-dark">
       <TopbarSlot title="Chat" subtitle="Converse com a IA para criar seus textos">
         <div className="flex items-center gap-3">
-
+          <select
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            className="px-3 py-2 rounded-md border border-neutral-border dark:border-neutral-border-dark bg-neutral-light dark:bg-neutral-dark text-neutral-text dark:text-neutral-text-dark text-small focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="claude-opus-4-1">Claude Opus 4.1</option>
+            <option value="claude-sonnet-4-5">Claude Sonnet 4.5</option>
+            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+            <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+            <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
+          </select>
           <Button onClick={handleNewChat}>+ Novo Chat</Button>
         </div>
       </TopbarSlot>

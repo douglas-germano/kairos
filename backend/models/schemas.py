@@ -30,9 +30,8 @@ class SendMessageRequest(BaseModel):
     def validate_model(cls, v):
         if v is None:
             return v
-        allowed = VALID_MODELS.union({'llama-3.3-70b-versatile', 'gemini-1.5-pro', 'gemini-1.5-flash'})
-        if v not in allowed:
-            raise ValueError(f'Modelo deve ser um de: {allowed}')
+        if v not in VALID_MODELS:
+            raise ValueError(f'Modelo deve ser um de: {VALID_MODELS}')
         return v
 
 class PaginationParams(BaseModel):
@@ -40,7 +39,13 @@ class PaginationParams(BaseModel):
     limit: int = Field(default=50, ge=1, le=100)
 
 # ========== CUSTOM AI SCHEMAS ==========
-VALID_MODELS = {'claude-opus-4-1', 'claude-sonnet-4-5', 'gemini-1.5-pro', 'gemini-1.5-flash'}
+VALID_MODELS = {
+    'claude-opus-4-1', 
+    'claude-sonnet-4-5', 
+    'gemini-1.5-pro', 
+    'gemini-1.5-flash',
+    'llama-3.3-70b-versatile'
+}
 
 class CreateCustomAIRequest(BaseModel):
     tenant_id: str
