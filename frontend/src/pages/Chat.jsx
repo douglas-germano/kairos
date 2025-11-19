@@ -237,6 +237,7 @@ export default function Chat() {
           >
             <option value="claude-opus-4-1">Claude Opus 4.1</option>
             <option value="claude-sonnet-4-5">Claude Sonnet 4.5</option>
+            <option value="gemini-3-pro-preview">Gemini 3 Pro (Preview)</option>
             <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
             <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
             <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>

@@ -44,6 +44,7 @@ VALID_MODELS = {
     'claude-sonnet-4-5', 
     'gemini-1.5-pro', 
     'gemini-1.5-flash',
+    'gemini-3-pro-preview',
     'llama-3.3-70b-versatile'
 }
 

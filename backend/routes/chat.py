@@ -10,6 +10,7 @@ from utils.decorators import (
 from utils.auth_utils import user_role_in_tenant
 from utils.claude_client import get_claude_response
 from utils.groq_client import get_groq_response
+from utils.google_client import get_google_response
 from models.schemas import VALID_MODELS
 from models.schemas import SendMessageRequest, PaginationParams
 from models.exceptions import (
