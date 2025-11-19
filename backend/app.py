@@ -25,20 +25,12 @@ from models.exceptions import KairosException
 app = Flask(__name__)
 
 # CORS Configuration
-# Allow requests from frontend (both local and production)
-CORS(app, resources={
-    r"/*": {
-        "origins": [
-            "http://localhost:3000",
-            "http://localhost:5173",
-            "https://kairos-frontend-eb6u.onrender.com",
-            "https://kairos-frontend.onrender.com"
-        ],
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"],
-        "supports_credentials": True
-    }
-})
+# More permissive CORS for production deployment
+CORS(app, 
+     origins="*",
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+     allow_headers=["Content-Type", "Authorization"],
+     supports_credentials=False)
 
 # Limiter
 limiter = Limiter(
