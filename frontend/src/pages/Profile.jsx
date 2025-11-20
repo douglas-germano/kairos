@@ -4,7 +4,8 @@ import useAuth from '../contexts/useAuth'
 import Topbar from '../components/Topbar'
 import Button from '../components/Button'
 import Input from '../components/Input'
- 
+import QuotaCard from '../components/QuotaCard'
+
 import { authAPI, tenantsAPI } from '../services/api'
 
 export default function Profile() {
@@ -244,6 +245,7 @@ export default function Profile() {
               </div>
             )}
           </div>
+          <QuotaCard />
         </div>
       </div>
     </div>

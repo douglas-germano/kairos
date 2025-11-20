@@ -2,7 +2,9 @@ from flask import Blueprint, request, jsonify, g
 from pydantic import ValidationError as PydanticValidationError
 from config.supabase_config import supabase
 from utils.auth_utils import generate_token, hash_password, verify_password
-from utils.decorators import require_json, handle_exceptions
+from utils.auth_utils import generate_token, hash_password, verify_password
+from utils.decorators import require_json, handle_exceptions, token_required
+from models.quota_manager import QuotaManager
 from models.schemas import RegisterRequest, LoginRequest
 from models.exceptions import (
     ValidationError,
@@ -301,3 +303,28 @@ def reset_password():
         .execute()
 
     return jsonify({'message': 'Senha redefinida com sucesso'}), 200
+
+@auth_bp.route('/quota', methods=['GET'])
+@token_required
+@handle_exceptions
+def get_quota():
+    """Obtém quota do usuário atual"""
+    # Buscar tenant do usuário
+    user_tenants = supabase.table('tenant_users') \
+        .select('tenant_id') \
+        .eq('user_id', g.user_id) \
+        .limit(1) \
+        .execute()
+
+    if not user_tenants.data:
+        # Se não tiver tenant, assume free/sem uso
+        return jsonify({
+            'plan': 'free',
+            'usage': {},
+            'limits': QuotaManager.LIMITS_BY_PLAN['free']
+        }), 200
+
+    tenant_id = user_tenants.data[0]['tenant_id']
+    stats = QuotaManager.get_usage_stats(tenant_id)
+    
+    return jsonify(stats), 200

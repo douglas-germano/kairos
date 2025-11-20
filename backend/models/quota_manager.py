@@ -105,11 +105,6 @@ class QuotaManager:
     def log_usage(cls, tenant_id: str, action: str, user_id: str) -> None:
         """
         Registra uso de quota.
-
-        Args:
-            tenant_id: ID do tenant
-            action: Ação realizada
-            user_id: ID do usuário
         """
         try:
             supabase.table('quota_logs').insert({
@@ -120,3 +115,40 @@ class QuotaManager:
             }).execute()
         except Exception as e:
             logger.error(f'Error logging quota: {str(e)}')
+
+    @classmethod
+    def get_usage_stats(cls, tenant_id: str) -> Dict:
+        """
+        Obtém estatísticas de uso do tenant.
+        """
+        plan = cls.get_tenant_plan(tenant_id)
+        limits = cls.LIMITS_BY_PLAN.get(plan, {})
+        
+        today = date.today().isoformat()
+        stats = {
+            'plan': plan,
+            'usage': {},
+            'limits': limits
+        }
+
+        try:
+            # Buscar uso de todas as ações hoje
+            result = supabase.table('quota_logs') \
+                .select('action') \
+                .eq('tenant_id', tenant_id) \
+                .gte('created_at', f'{today}T00:00:00') \
+                .execute()
+
+            # Contar ocorrências por ação
+            usage_counts = {}
+            if result.data:
+                for log in result.data:
+                    action = log['action']
+                    usage_counts[action] = usage_counts.get(action, 0) + 1
+
+            stats['usage'] = usage_counts
+            return stats
+
+        except Exception as e:
+            logger.error(f'Error getting usage stats: {str(e)}')
+            return stats

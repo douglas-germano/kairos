@@ -97,6 +97,7 @@ export const authAPI = {
   forgotPassword: (data) => api.post('/api/v1/auth/forgot-password', data),
   verifyCode: (data) => api.post('/api/v1/auth/verify-code', data),
   resetPassword: (data) => api.post('/api/v1/auth/reset-password', data),
+  getQuota: () => api.get('/api/v1/auth/quota'),
 }
 
 // Projects
