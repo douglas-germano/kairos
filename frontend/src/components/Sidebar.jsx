@@ -16,29 +16,58 @@ export default function Sidebar() {
   const navItems = [
     { path: '/chat', icon: MessageSquare, label: 'Chat' },
     { path: '/web', icon: Globe, label: 'Web' },
+    { path: '/images', icon: ImageIcon, label: 'Imagens' },
     { path: '/conversations', icon: History, label: 'Conversas' },
     { path: '/agents', icon: Bot, label: 'Agentes' },
     { path: '/create', icon: FilePlus, label: 'Criar' },
     { path: '/projects', icon: FolderKanban, label: 'Projetos' },
-    { path: '/images', icon: ImageIcon, label: 'Imagens' },
     { path: '/swipes', icon: Sparkles, label: 'Swipes' },
   ]
+
+  const { logout, user, currentTenant, switchTenant } = useAuth()
+  const navigate = useNavigate()
+  const [isTenantMenuOpen, setIsTenantMenuOpen] = useState(false)
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
+
+  const toggleTenantMenu = () => {
+    setIsTenantMenuOpen(!isTenantMenuOpen)
+  }
 
   const isActive = (path) => location.pathname === path
 
   return (
-    <div className={`${collapsed ? 'w-20' : 'w-64'} h-screen border-r border-neutral-border dark:border-neutral-border-dark bg-neutral-light dark:bg-neutral-dark flex flex-col transition-all duration-300 ease-in-out`}>
+    <div className="h-screen w-64 bg-neutral-light dark:bg-neutral-dark-secondary border-r border-neutral-border dark:border-neutral-border-dark flex flex-col transition-colors duration-200">
+      <div className="p-6">
+        <div className="flex items-center gap-3 mb-6 relative">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-xl">K</span>
+          </div>
+          <div className="flex-1 cursor-pointer" onClick={toggleTenantMenu}>
+            <h1 className="text-h3 text-neutral-text-primary dark:text-neutral-text-primary-dark">Kairos</h1>
+            {currentTenant && (
+              <p className="text-xs text-neutral-text-secondary flex items-center">
+                {currentTenant.nome}
+                <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              </p>
+            )}
+          </div>
 
-      <div className="sticky top-0 z-40 h-[72px] px-xl bg-neutral-light dark:bg-neutral-dark">
-        <div className="h-full flex items-center gap-3 justify-start">
-          <button
-            onClick={toggleCollapsed}
-            className="flex items-center gap-2 px-3 py-2 rounded-md text-neutral-text-secondary hover:bg-neutral-light-secondary dark:hover:bg-neutral-dark-secondary hover:text-neutral-text transition-all duration-300 ease-in-out"
-            aria-label={collapsed ? 'Expandir sidebar' : 'Recolher sidebar'}
-          >
-            {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-          </button>
-          <span className={`text-h3 font-semibold tracking-wide transition-opacity duration-300 ease-in-out ${collapsed ? 'opacity-0' : 'opacity-100'}`}>KAIROS</span>
+          {isTenantMenuOpen && (
+            <div className="absolute top-full left-0 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-50 mt-1">
+              <div className="p-2">
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-2 py-1">Trocar Workspace</p>
+                {/* Aqui poderíamos listar os tenants reais se tivéssemos a lista no contexto. 
+                          Por enquanto, apenas mostramos o atual e uma opção de 'Gerenciar' */}
+                <div className="px-2 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer" onClick={() => navigate('/settings')}>
+                  Gerenciar Workspaces
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

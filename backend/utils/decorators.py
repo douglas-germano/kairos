@@ -86,6 +86,21 @@ def token_required(f):
             user_id = payload.get('user_id')
             g.user_id = user_id
             request.user_id = user_id
+            
+            # Tenant Context Logic
+            tenant_id = request.headers.get('X-Tenant-ID')
+            if tenant_id:
+                # Validar se usuário pertence ao tenant
+                if user_belongs_to_tenant(user_id, tenant_id):
+                    g.tenant_id = tenant_id
+                else:
+                    # Se enviou tenant inválido/sem acesso, loga aviso mas não bloqueia autenticação
+                    # (bloqueio de autorização será feito pelos decorators específicos se necessário)
+                    logger.warning(f'User {user_id} attempted access to unauthorized tenant {tenant_id}')
+                    g.tenant_id = None
+            else:
+                g.tenant_id = None
+
         except AuthenticationError:
             raise
         except Exception as e:

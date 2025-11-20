@@ -25,13 +25,26 @@ export const apiEvents = {
   }
 }
 
-// Interceptor para adicionar token
+// Interceptor para adicionar token e tenant
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
+
+    const currentTenant = localStorage.getItem('currentTenant')
+    if (currentTenant) {
+      try {
+        const tenant = JSON.parse(currentTenant)
+        if (tenant && tenant.id) {
+          config.headers['X-Tenant-ID'] = tenant.id
+        }
+      } catch (e) {
+        console.error('Error parsing tenant for header', e)
+      }
+    }
+
     return config
   },
   (error) => {

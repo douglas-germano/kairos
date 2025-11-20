@@ -147,12 +147,39 @@ def login():
             'created_at': user_data.get('created_at')
         }
 
+        # Buscar tenants do usuário
+        tenants_res = supabase.table('tenant_users') \
+            .select('tenant_id, role, tenants(id, nome, plano)') \
+            .eq('user_id', user_data['id']) \
+            .execute()
+        
+        tenants = []
+        default_tenant = None
+        
+        if tenants_res.data:
+            for item in tenants_res.data:
+                t_data = item.get('tenants')
+                if t_data:
+                    tenant_obj = {
+                        'id': t_data['id'],
+                        'nome': t_data['nome'],
+                        'plano': t_data['plano'],
+                        'role': item['role']
+                    }
+                    tenants.append(tenant_obj)
+            
+            # Define default tenant (primeiro da lista ou lógica específica)
+            if tenants:
+                default_tenant = tenants[0]
+
         logger.info(f'User logged in: {email}', extra={'user_id': user_data['id']})
 
         return jsonify({
             'message': 'Login realizado com sucesso',
             'token': token,
-            'user': response_data
+            'user': response_data,
+            'tenants': tenants,
+            'default_tenant': default_tenant
         }), 200
 
     except (AuthenticationError, ValidationError):

@@ -40,22 +40,20 @@ def send_message():
         raise ValidationError('Validação falhou', details=e.errors())
 
     try:
-        # Validar quota
-        tenant_id = data.tenant_id
-        if not tenant_id:
-            user_tenants = supabase.table('tenant_users') \
-                .select('tenant_id') \
-                .eq('user_id', g.user_id) \
-                .limit(1) \
-                .execute()
+        # Tenant Context
+        tenant_id = getattr(g, 'tenant_id', None)
+        user_id = g.user_id
+        message = data.message
+        model = data.model
 
-            if not user_tenants.data:
-                raise ValidationError('Usuário não pertence a nenhum tenant')
-
-            tenant_id = user_tenants.data[0]['tenant_id']
-
-        # Verificar quota antes de processar
-        QuotaManager.check_quota(tenant_id, 'api_calls_per_day')
+        # Validar quota se tenant estiver definido
+        if tenant_id:
+            try:
+                QuotaManager.check_limit(tenant_id, 'api_calls_per_day')
+                QuotaManager.check_limit(tenant_id, 'messages_per_conversation', data.conversation_id)
+            except Exception as e:
+                logger.error(f"Error checking quota: {e}")
+                return jsonify({'error': str(e)}), 403
 
         messages_history = data.messages or []
         messages_history.append({
@@ -66,17 +64,27 @@ def send_message():
         # Criar conversa se necessário
         conversation_id = data.conversation_id
         if not conversation_id:
-            titulo = (data.message[:60] + '...') if len(data.message) > 60 else data.message
-            conv_res = supabase.table('conversations').insert({
-                'tenant_id': tenant_id,
-                'user_id': g.user_id,
-                'titulo': titulo
-            }).execute()
-
+            # Gerar título inicial
+            title = message[:50] + "..."
+            
+            conv_data = {
+                'user_id': user_id,
+                'titulo': title, # Changed 'title' to 'titulo' to match schema
+                'model': model,
+                'tenant_id': tenant_id  # Associar ao tenant atual
+            }
+            
+            conv_res = supabase.table('conversations').insert(conv_data).execute()
+            
             if not conv_res.data:
                 raise Exception('Erro ao criar conversa')
 
             conversation_id = conv_res.data[0]['id']
+            
+            # Logar criação de conversa na quota
+            if tenant_id:
+                QuotaManager.log_usage(tenant_id, 'conversations')
+
 
         # Salvar mensagem do usuário
         supabase.table('messages').insert({
@@ -114,8 +122,10 @@ def send_message():
             .eq('id', conversation_id) \
             .execute()
 
-        # Registrar uso de quota
-        QuotaManager.log_usage(tenant_id, 'api_calls_per_day', g.user_id)
+        # Logar uso da API
+        if tenant_id:
+            logger.info(f"Logging API usage for tenant {tenant_id}")
+            QuotaManager.log_usage(tenant_id, 'api_calls_per_day', g.user_id)
 
         # Gerar título assincronamente se for nova conversa ou tiver poucas mensagens
         if len(messages_history) <= 2:
@@ -160,32 +170,47 @@ def list_conversations():
     try:
         offset = request.args.get('offset', 0, type=int)
         limit = request.args.get('limit', 50, type=int)
-
+        
         # Validar ranges
         offset = max(0, offset)
         limit = max(1, min(100, limit))
 
-        # Contar total
-        total_res = supabase.table('conversations') \
-            .select('count', count='exact') \
-            .eq('user_id', g.user_id) \
-            .execute()
+        user_id = g.user_id
+        tenant_id = getattr(g, 'tenant_id', None)
 
-        # Buscar com paginação
-        convs = supabase.table('conversations') \
+        # Base query
+        query = supabase.table('conversations') \
+            .select('id, titulo, created_at, updated_at', count='exact') \
+            .eq('user_id', user_id)
+            
+        # Apply tenant_id filter if present
+        if tenant_id:
+            query = query.eq('tenant_id', tenant_id)
+            
+        # Execute count query
+        total_res = query.execute()
+        total_count = total_res.count
+
+        # Execute data query with pagination
+        convs_query = supabase.table('conversations') \
             .select('id, titulo, created_at, updated_at') \
-            .eq('user_id', g.user_id) \
+            .eq('user_id', user_id)
+        
+        if tenant_id:
+            convs_query = convs_query.eq('tenant_id', tenant_id)
+
+        convs = convs_query \
             .order('updated_at', desc=True) \
             .range(offset, offset + limit - 1) \
             .execute()
-
+            
         return jsonify({
             'conversations': convs.data or [],
             'pagination': {
                 'offset': offset,
                 'limit': limit,
-                'total': total_res.count,
-                'has_more': (offset + limit) < (total_res.count or 0)
+                'total': total_count,
+                'has_more': (offset + limit) < (total_count or 0)
             }
         }), 200
 

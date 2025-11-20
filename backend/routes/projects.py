@@ -6,18 +6,24 @@ projects_bp = Blueprint('projects', __name__, url_prefix='/api/v1/projects')
 
 @projects_bp.route('/create', methods=['POST'])
 @token_required
-@require_tenant_membership('tenant_id')
 def create_project():
     data = request.json
-    tenant_id = data.get('tenant_id')
+    # Tenta pegar do contexto, senão do body
+    tenant_id = getattr(g, 'tenant_id', None) or data.get('tenant_id')
+    
     nome = data.get('nome', '').strip()
     descricao = data.get('descricao', '').strip()
     user_id = request.user_id
     
     if not tenant_id or not nome:
-        return jsonify({'error': 'tenant_id e nome são obrigatórios'}), 400
+        return jsonify({'error': 'tenant_id (via header ou body) e nome são obrigatórios'}), 400
     
-    # Validar se tenant existe
+    # Se veio do body e não do header, valida acesso
+    if not getattr(g, 'tenant_id', None):
+        if not user_belongs_to_tenant(user_id, tenant_id):
+             return jsonify({'error': 'Acesso negado ao tenant'}), 403
+
+    # Validar se tenant existe (opcional se já validou acesso, mas bom pra garantir)
     try:
         tenant = supabase.table('tenants').select('id').eq('id', tenant_id).execute()
         if not tenant.data:
