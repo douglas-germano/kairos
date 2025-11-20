@@ -48,12 +48,7 @@ def send_message():
 
         # Validar quota se tenant estiver definido
         if tenant_id:
-            try:
-                QuotaManager.check_limit(tenant_id, 'api_calls_per_day')
-                QuotaManager.check_limit(tenant_id, 'messages_per_conversation', data.conversation_id)
-            except Exception as e:
-                logger.error(f"Error checking quota: {e}")
-                return jsonify({'error': str(e)}), 403
+            QuotaManager.check_quota(tenant_id, 'api_calls_per_day')
 
         messages_history = data.messages or []
         messages_history.append({
@@ -64,13 +59,16 @@ def send_message():
         # Criar conversa se necessário
         conversation_id = data.conversation_id
         if not conversation_id:
+            # Verificar quota de conversas antes de criar
+            if tenant_id:
+                QuotaManager.check_quota(tenant_id, 'conversations')
+            
             # Gerar título inicial
             title = message[:50] + "..."
             
             conv_data = {
                 'user_id': user_id,
                 'titulo': title, # Changed 'title' to 'titulo' to match schema
-                'model': model,
                 'tenant_id': tenant_id  # Associar ao tenant atual
             }
             
@@ -83,7 +81,7 @@ def send_message():
             
             # Logar criação de conversa na quota
             if tenant_id:
-                QuotaManager.log_usage(tenant_id, 'conversations')
+                QuotaManager.log_usage(tenant_id, 'conversations', user_id)
 
 
         # Salvar mensagem do usuário
@@ -168,6 +166,8 @@ def send_message():
 def list_conversations():
     """Lista conversas do usuário com paginação"""
     try:
+        logger.info(f"list_conversations called by user_id: {g.user_id}, tenant_id: {getattr(g, 'tenant_id', None)}")
+        
         offset = request.args.get('offset', 0, type=int)
         limit = request.args.get('limit', 50, type=int)
         

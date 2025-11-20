@@ -107,6 +107,98 @@ def get_custom_ai(custom_ai_id):
         raise
     except Exception as e:
         logger.error(f'Error getting custom AI: {str(e)}')
+        import traceback
+        traceback.print_exc()
+        raise
+
+@custom_ais_bp.route('/<custom_ai_id>', methods=['PUT'])
+@token_required
+@require_json
+@handle_exceptions
+def update_custom_ai(custom_ai_id):
+    """Atualiza IA personalizada"""
+    try:
+        data = request.json
+        
+        # Validar se IA existe
+        existing = supabase.table('custom_ais') \
+            .select('tenant_id') \
+            .eq('id', custom_ai_id) \
+            .limit(1) \
+            .execute()
+            
+        if not existing.data:
+            raise NotFoundError('IA personalizada')
+            
+        tenant_id = existing.data[0]['tenant_id']
+        
+        # Validar permissão no tenant
+        from utils.auth_utils import user_belongs_to_tenant
+        if not user_belongs_to_tenant(g.user_id, tenant_id):
+            raise AuthorizationError()
+
+        # Campos permitidos para atualização
+        allowed_fields = ['nome', 'descricao', 'sistema_prompt', 'modelo', 'temperatura', 'max_tokens', 'ativo']
+        update_data = {k: v for k, v in data.items() if k in allowed_fields}
+        
+        if not update_data:
+            return jsonify({'message': 'Nenhum dado para atualizar'}), 200
+
+        # Atualizar
+        updated = supabase.table('custom_ais') \
+            .update(update_data) \
+            .eq('id', custom_ai_id) \
+            .execute()
+            
+        if not updated.data:
+            raise Exception('Erro ao atualizar IA personalizada')
+            
+        return jsonify({
+            'message': 'IA personalizada atualizada com sucesso',
+            'custom_ai': updated.data[0]
+        }), 200
+
+    except (NotFoundError, AuthorizationError):
+        raise
+    except Exception as e:
+        logger.error(f'Error updating custom AI: {str(e)}')
+        raise
+
+@custom_ais_bp.route('/<custom_ai_id>', methods=['DELETE'])
+@token_required
+@handle_exceptions
+def delete_custom_ai(custom_ai_id):
+    """Deleta (soft delete) IA personalizada"""
+    try:
+        # Validar se IA existe
+        existing = supabase.table('custom_ais') \
+            .select('tenant_id') \
+            .eq('id', custom_ai_id) \
+            .limit(1) \
+            .execute()
+            
+        if not existing.data:
+            raise NotFoundError('IA personalizada')
+            
+        tenant_id = existing.data[0]['tenant_id']
+        
+        # Validar permissão no tenant
+        from utils.auth_utils import user_belongs_to_tenant
+        if not user_belongs_to_tenant(g.user_id, tenant_id):
+            raise AuthorizationError()
+
+        # Soft delete
+        updated = supabase.table('custom_ais') \
+            .update({'ativo': False}) \
+            .eq('id', custom_ai_id) \
+            .execute()
+            
+        return jsonify({'message': 'IA personalizada removida com sucesso'}), 200
+
+    except (NotFoundError, AuthorizationError):
+        raise
+    except Exception as e:
+        logger.error(f'Error deleting custom AI: {str(e)}')
         raise
 
 @custom_ais_bp.route('/tenant/<tenant_id>', methods=['GET'])

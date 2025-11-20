@@ -73,10 +73,29 @@ class QuotaManager:
         plan = cls.get_tenant_plan(tenant_id)
         limit = cls.LIMITS_BY_PLAN.get(plan, {}).get(action, 100)
 
-        # Contar uso hoje
-        today = date.today().isoformat()
-
         try:
+            # Special handling for custom_ais - count only active agents
+            if action == 'custom_ais':
+                result = supabase.table('custom_ais') \
+                    .select('count', count='exact') \
+                    .eq('tenant_id', tenant_id) \
+                    .eq('ativo', True) \
+                    .execute()
+                
+                usage = result.count or 0
+                
+                if usage >= limit:
+                    logger.warning(
+                        f'Quota exceeded for {tenant_id}: {action}',
+                        extra={'usage': usage, 'limit': limit}
+                    )
+                    raise QuotaExceededError(action)
+                
+                return True
+            
+            # For other actions, count usage today from quota_logs
+            today = date.today().isoformat()
+            
             result = supabase.table('quota_logs') \
                 .select('count', count='exact') \
                 .eq('tenant_id', tenant_id) \
@@ -91,7 +110,7 @@ class QuotaManager:
                     f'Quota exceeded for {tenant_id}: {action}',
                     extra={'usage': usage, 'limit': limit}
                 )
-                raise QuotaExceededError()
+                raise QuotaExceededError(action)
 
             return True
 
@@ -132,7 +151,7 @@ class QuotaManager:
         }
 
         try:
-            # Buscar uso de todas as ações hoje
+            # Buscar uso de ações diárias (api_calls_per_day, conversations)
             result = supabase.table('quota_logs') \
                 .select('action') \
                 .eq('tenant_id', tenant_id) \
@@ -145,6 +164,21 @@ class QuotaManager:
                 for log in result.data:
                     action = log['action']
                     usage_counts[action] = usage_counts.get(action, 0) + 1
+
+            # Adicionar contagem de agentes ativos
+            agents_result = supabase.table('custom_ais') \
+                .select('count', count='exact') \
+                .eq('tenant_id', tenant_id) \
+                .eq('ativo', True) \
+                .execute()
+            usage_counts['custom_ais'] = agents_result.count or 0
+
+            # Adicionar contagem de projetos
+            projects_result = supabase.table('projects') \
+                .select('count', count='exact') \
+                .eq('tenant_id', tenant_id) \
+                .execute()
+            usage_counts['projects'] = projects_result.count or 0
 
             stats['usage'] = usage_counts
             return stats

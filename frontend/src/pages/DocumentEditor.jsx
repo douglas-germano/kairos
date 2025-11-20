@@ -17,15 +17,16 @@ import Image from '@tiptap/extension-image'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import { lowlight } from 'lowlight'
 import Button from '../components/Button'
+import AIToolbar from '../components/AIToolbar'
 import { Undo2, Redo2, Bold as BoldIcon, Italic as ItalicIcon, Strikethrough, Underline as UnderlineIcon, Code as CodeIcon, AlignLeft, AlignCenter, AlignRight, AlignJustify, Plus } from 'lucide-react'
-import { projectsAPI } from '../services/api'
+import { projectsAPI, aiAPI } from '../services/api'
 import Topbar from '../components/Topbar'
 
 export default function DocumentEditor() {
   const { fileId } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
-  
+
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [fileMeta, setFileMeta] = useState(null)
@@ -93,10 +94,52 @@ export default function DocumentEditor() {
     else navigate(-1)
   }
 
-  
+  const handleAIAction = async (action, text, extraParam) => {
+    setError('')
+    try {
+      let result
 
-  
-  
+      switch (action) {
+        case 'improve':
+          result = await aiAPI.improveText(text)
+          // Substituir seleção com texto melhorado
+          editor?.chain().focus().deleteSelection().insertContent(result.data.improved_text).run()
+          break
+
+        case 'continue':
+          result = await aiAPI.continueWriting(text)
+          // Inserir continuação no final
+          editor?.chain().focus().setTextSelection(editor.state.doc.content.size).insertContent('\n\n' + result.data.continuation).run()
+          break
+
+        case 'summarize':
+          result = await aiAPI.summarize(text)
+          // Substituir seleção com resumo
+          editor?.chain().focus().deleteSelection().insertContent(result.data.summary).run()
+          break
+
+        case 'translate':
+          result = await aiAPI.translate(text, extraParam)
+          // Substituir seleção com tradução
+          editor?.chain().focus().deleteSelection().insertContent(result.data.translation).run()
+          break
+
+        default:
+          break
+      }
+    } catch (err) {
+      if (err.response?.data?.code === 'QUOTA_EXCEEDED') {
+        setError('Limite de uso de IA atingido. Faça upgrade do seu plano.')
+      } else {
+        setError(err.response?.data?.error || 'Erro ao processar com IA')
+      }
+    }
+  }
+
+
+
+
+
 
   return (
     <div className="h-full flex flex-col">
@@ -104,7 +147,8 @@ export default function DocumentEditor() {
         <Button variant="secondary" onClick={handleBack}>Voltar</Button>
         <Button onClick={handleSave} disabled={saving || !editor}>{saving ? 'Salvando…' : 'Salvar'}</Button>
       </Topbar>
-      
+
+      <AIToolbar editor={editor} onAIAction={handleAIAction} />
 
       <div className="sticky top-[72px] z-30 border-b border-neutral-border dark:border-neutral-border-dark bg-neutral-light-secondary dark:bg-neutral-dark-secondary">
         <div className="px-xl py-2 flex justify-center gap-2">

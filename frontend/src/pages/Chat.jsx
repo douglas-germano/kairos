@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { chatAPI, customAIsAPI, webAPI, visionAPI } from '../services/api'
+import { chatAPI, customAIsAPI, visionAPI } from '../services/api'
 import { AlertTriangle } from 'lucide-react'
 import ChatComponent from '../components/ChatComponent'
 import { TopbarSlot } from '../components/Layout'
 import Button from '../components/Button'
+import QuotaExceededAlert from '../components/QuotaExceededAlert'
 
 export default function Chat() {
   const [messages, setMessages] = useState([])
@@ -16,6 +17,7 @@ export default function Chat() {
   const [customAiName, setCustomAiName] = useState('')
   const [imageGenerating] = useState(false)
   const [pendingImage, setPendingImage] = useState(null)
+  const [quotaError, setQuotaError] = useState(null)
   const messagesEndRef = useRef(null)
   const [searchParams] = useSearchParams()
   const [model, setModel] = useState('claude-sonnet-4-5')
@@ -44,23 +46,6 @@ export default function Chat() {
     setLoading(true)
 
     try {
-      if (!pendingImage && !isCustomAi && text.toLowerCase().startsWith('/web')) {
-        const q = text.slice(4).trim()
-        if (!q) return
-        const res = await webAPI.search({ query: q })
-        const assistantMessage = {
-          id: now + 1,
-          role: 'assistant',
-          content: res.data?.answer || 'Não foi possível obter resultado da web.',
-          links: (res.data?.sources || []).map((s) => s.url),
-          timestamp: new Date(),
-        }
-        setMessages((prev) => [...prev, assistantMessage])
-        if (res.data?.conversation_id) {
-          localStorage.setItem('last_chat_conversation_id', String(res.data.conversation_id))
-        }
-        return
-      }
       if (isCustomAi) {
         const res = await customAIsAPI.sendMessage(conversationId, { message: text, custom_ai_id: customAiId, model })
         const assistantMessage = {
@@ -100,14 +85,19 @@ export default function Chat() {
         }
       }
     } catch (error) {
-      const errorMessage = {
-        id: now + 1,
-        role: 'assistant',
-        content: `Erro: ${error.response?.data?.error || 'Erro ao enviar mensagem'}`,
-        timestamp: new Date(),
-        error: true,
+      // Check if it's a quota error
+      if (error.response?.data?.code === 'QUOTA_EXCEEDED') {
+        setQuotaError(error.response.data)
+      } else {
+        const errorMessage = {
+          id: now + 1,
+          role: 'assistant',
+          content: `Erro: ${error.response?.data?.error || 'Erro ao enviar mensagem'}`,
+          timestamp: new Date(),
+          error: true,
+        }
+        setMessages((prev) => [...prev, errorMessage])
       }
-      setMessages((prev) => [...prev, errorMessage])
     } finally {
       setLoading(false)
       setPendingImage(null)
@@ -257,6 +247,8 @@ export default function Chat() {
           </div>
         </div>
       )}
+
+      {quotaError && <QuotaExceededAlert error={quotaError} />}
 
       <ChatComponent
         messages={messages}

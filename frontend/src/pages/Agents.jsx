@@ -8,18 +8,16 @@ import { Bot, Trash2, Edit2, MessageSquare } from 'lucide-react'
 
 export default function Agents() {
   const navigate = useNavigate()
-  
-  
+
+
   const [selectedOrg, setSelectedOrg] = useState('')
   const [agents, setAgents] = useState([])
   const [loading, setLoading] = useState(false)
-  
-  const [editModal, setEditModal] = useState(false)
+
   const [deleteModal, setDeleteModal] = useState(false)
   const [conversationsModal, setConversationsModal] = useState(false)
   const [selected, setSelected] = useState(null)
   const [error, setError] = useState('')
-  const [form, setForm] = useState({ nome: '', descricao: '', sistema_prompt: '', modelo: 'claude-opus-4-1', temperatura: 0.7, max_tokens: 2048, tenant_id: '' })
   const [agentConversations, setAgentConversations] = useState([])
   const [convLoading, setConvLoading] = useState(false)
   const [newConvTitle, setNewConvTitle] = useState('Nova Conversa')
@@ -60,43 +58,10 @@ export default function Agents() {
     navigate('/agents/new')
   }
 
-  
+
 
   const openEdit = (agent) => {
-    setSelected(agent)
-    setForm({
-      nome: agent.nome || '',
-      descricao: agent.descricao || '',
-      sistema_prompt: agent.sistema_prompt || '',
-      modelo: agent.modelo || 'claude-opus-4-1',
-      temperatura: agent.temperatura ?? 0.7,
-      max_tokens: agent.max_tokens ?? 2048,
-      tenant_id: agent.tenant_id || selectedOrg || '',
-    })
-    setError('')
-    setEditModal(true)
-  }
-
-  const handleUpdate = async (e) => {
-    e.preventDefault()
-    setError('')
-    if (!form.nome) { setError('Nome é obrigatório'); return }
-    try {
-      const res = await customAIsAPI.update(selected.id, {
-        nome: form.nome,
-        descricao: form.descricao,
-        sistema_prompt: form.sistema_prompt,
-        modelo: form.modelo,
-        temperatura: form.temperatura,
-        max_tokens: form.max_tokens,
-      })
-      const updated = res.data
-      setAgents(agents.map((a) => (a.id === updated.id ? updated : a)))
-      setEditModal(false)
-      setSelected(null)
-    } catch (err) {
-      setError(err.response?.data?.error || 'Erro ao atualizar agente')
-    }
+    navigate(`/agents/${agent.id}/edit`)
   }
 
   const openDelete = (agent) => { setSelected(agent); setDeleteModal(true) }
@@ -197,46 +162,10 @@ export default function Agents() {
         )}
       </div>
 
-      
+
 
       {/* Modal Editar Agente */}
-      {editModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-neutral-light dark:bg-neutral-dark-secondary border border-neutral-border dark:border-neutral-border-dark rounded-lg p-6 w-full max-w-lg">
-            <h2 className="text-h3 mb-4">Editar Agente</h2>
-            <form onSubmit={handleUpdate} className="space-y-4">
-              <Input label="Nome" value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} required />
-              <div>
-                <label className="block text-caption text-neutral-text-secondary mb-2">Descrição</label>
-                <textarea value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} rows={3} className="w-full px-3.5 py-2.5 rounded-md bg-neutral-light dark:bg-neutral-dark border border-neutral-border dark:border-neutral-border-dark text-body text-neutral-text" />
-              </div>
-              <div>
-                <label className="block text-caption text-neutral-text-secondary mb-2">Prompt do Sistema</label>
-                <textarea value={form.sistema_prompt} onChange={(e) => setForm({ ...form, sistema_prompt: e.target.value })} rows={4} className="w-full px-3.5 py-2.5 rounded-md bg-neutral-light dark:bg-neutral-dark border border-neutral-border dark:border-neutral-border-dark text-body text-neutral-text" />
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-caption text-neutral-text-secondary mb-2">Modelo</label>
-                  <Input value={form.modelo} onChange={(e) => setForm({ ...form, modelo: e.target.value })} />
-                </div>
-                <div>
-                  <label className="block text-caption text-neutral-text-secondary mb-2">Temperatura</label>
-                  <Input type="number" step="0.1" value={form.temperatura} onChange={(e) => setForm({ ...form, temperatura: parseFloat(e.target.value) })} />
-                </div>
-                <div>
-                  <label className="block text-caption text-neutral-text-secondary mb-2">Max Tokens</label>
-                  <Input type="number" value={form.max_tokens} onChange={(e) => setForm({ ...form, max_tokens: parseInt(e.target.value) })} />
-                </div>
-              </div>
-              {error && (<div className="text-small text-red-500 bg-red-50 dark:bg-red-900/20 p-3 rounded-md">{error}</div>)}
-              <div className="flex gap-3">
-                <Button type="submit" className="flex-1">Salvar</Button>
-                <Button type="button" variant="secondary" onClick={() => { setEditModal(false); setSelected(null); setError('') }}>Cancelar</Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+
 
       {/* Modal Excluir */}
       {deleteModal && (

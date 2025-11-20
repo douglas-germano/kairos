@@ -113,65 +113,73 @@ export default function AgentsCreate() {
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <Topbar title="Novo Agente" />
+    <div className="h-full flex flex-col overflow-hidden">
+      <Topbar title="Novo Agente">
+        <Button variant="secondary" onClick={() => navigate('/agents')}>Cancelar</Button>
+      </Topbar>
 
-      <div className="flex-1 overflow-y-auto p-xl">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="rounded-xl border border-neutral-border dark:border-neutral-border-dark bg-neutral-light dark:bg-neutral-dark-secondary p-6">
-            <form onSubmit={handleSave} className="space-y-4">
+      <div className="flex-1 overflow-hidden p-xl">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+          <div className="rounded-xl border border-neutral-border dark:border-neutral-border-dark bg-neutral-light dark:bg-neutral-dark-secondary p-6 h-full overflow-y-auto flex flex-col">
+            <form onSubmit={handleSave} className="space-y-4 flex-1 flex flex-col">
               <Input label="Nome" value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} required />
               <div>
                 <label className="block text-caption text-neutral-text-secondary mb-2">Descrição</label>
-                <textarea value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} rows={3} className="w-full px-3.5 py-2.5 rounded-md bg-neutral-light dark:bg-neutral-dark border border-neutral-border dark:border-neutral-border-dark text-body text-neutral-text" />
+                <textarea value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} rows={3} className="w-full px-3.5 py-2.5 rounded-md bg-neutral-light dark:bg-neutral-dark border border-neutral-border dark:border-neutral-border-dark text-body text-neutral-text focus:outline-none focus:border-primary transition-colors" />
+              </div>
+              <div className="flex-1 flex flex-col min-h-0">
+                <label className="block text-caption text-neutral-text-secondary mb-2">Prompt do Sistema</label>
+                <textarea value={form.sistema_prompt} onChange={(e) => setForm({ ...form, sistema_prompt: e.target.value })} className="w-full flex-1 px-3.5 py-2.5 rounded-md bg-neutral-light dark:bg-neutral-dark border border-neutral-border dark:border-neutral-border-dark text-body text-neutral-text focus:outline-none focus:border-primary transition-colors font-mono text-sm resize-none" required />
               </div>
               <div>
-                <label className="block text-caption text-neutral-text-secondary mb-2">Prompt do Sistema</label>
-                <textarea value={form.sistema_prompt} onChange={(e) => setForm({ ...form, sistema_prompt: e.target.value })} rows={8} className="w-full px-3.5 py-2.5 rounded-md bg-neutral-light dark:bg-neutral-dark border border-neutral-border dark:border-neutral-border-dark text-body text-neutral-text" required />
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-caption text-neutral-text-secondary mb-2">Modelo</label>
-                  <Input value={form.modelo} onChange={(e) => setForm({ ...form, modelo: e.target.value })} />
-                </div>
-                <div>
-                  <label className="block text-caption text-neutral-text-secondary mb-2">Temperatura</label>
-                  <Input type="number" step="0.1" value={form.temperatura} onChange={(e) => setForm({ ...form, temperatura: parseFloat(e.target.value) })} />
-                </div>
-                <div>
-                  <label className="block text-caption text-neutral-text-secondary mb-2">Max Tokens</label>
-                  <Input type="number" value={form.max_tokens} onChange={(e) => setForm({ ...form, max_tokens: parseInt(e.target.value) })} />
-                </div>
+                <label className="block text-caption text-neutral-text-secondary mb-2">Modelo</label>
+                <select
+                  value={form.modelo}
+                  onChange={(e) => setForm({ ...form, modelo: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-md bg-neutral-light dark:bg-neutral-dark border border-neutral-border dark:border-neutral-border-dark text-body text-neutral-text focus:outline-none focus:border-primary transition-colors appearance-none"
+                >
+                  <option value="claude-opus-4-1">Claude Opus 4.1</option>
+                  <option value="claude-sonnet-4-5">Claude Sonnet 4.5</option>
+                  <option value="gemini-3-pro-preview">Gemini 3 Pro (Preview)</option>
+                  <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                  <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                  <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
+                </select>
               </div>
               {error && (<div className="text-small text-red-500 bg-red-50 dark:bg-red-900/20 p-3 rounded-md">{error}</div>)}
-              <div className="flex gap-3">
-                <Button type="submit" className="flex-1" disabled={saving}>{saving ? 'Salvando…' : 'Salvar'}</Button>
-                <Button type="button" variant="secondary" onClick={() => navigate('/agents')}>Cancelar</Button>
+              <div className="pt-2">
+                <Button type="submit" className="w-full" disabled={saving}>{saving ? 'Salvando…' : 'Salvar'}</Button>
               </div>
               {createdAgent && (
-                <div className="text-small text-neutral-text-secondary">Agente criado: {createdAgent.nome}</div>
+                <div className="text-small text-neutral-text-secondary text-center">Agente criado: {createdAgent.nome}</div>
               )}
             </form>
           </div>
-          <div className="rounded-xl border border-neutral-border dark:border-neutral-border-dark bg-neutral-light dark:bg-neutral-dark-secondary flex flex-col min-h-0">
-            <ChatComponent
-              messages={previewMessages}
-              loading={false}
-              input={previewInput}
-              onChange={(e) => setPreviewInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  handlePreviewSend()
-                }
-              }}
-              onSubmit={handlePreviewSend}
-              placeholder="Teste seu agente aqui..."
-              submitLabel="Enviar"
-              messagesWidthClass="w-full"
-              inputWidthClass="w-full"
-              canSubmit={!!previewInput.trim()}
-            />
+          <div className="rounded-xl border border-neutral-border dark:border-neutral-border-dark bg-neutral-light dark:bg-neutral-dark-secondary flex flex-col h-full overflow-hidden">
+            <div className="p-4 border-b border-neutral-border dark:border-neutral-border-dark bg-neutral-light-secondary dark:bg-neutral-dark">
+              <h3 className="text-body font-semibold">Teste seu Agente</h3>
+              <p className="text-caption text-neutral-text-secondary">As alterações são aplicadas automaticamente ao testar.</p>
+            </div>
+            <div className="flex-1 min-h-0">
+              <ChatComponent
+                messages={messages}
+                loading={false}
+                input={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    handleSend(e)
+                  }
+                }}
+                onSubmit={handleSend}
+                placeholder="Teste seu agente aqui..."
+                submitLabel="Enviar"
+                messagesWidthClass="w-full"
+                inputWidthClass="w-full"
+                canSubmit={!!input.trim()}
+              />
+            </div>
           </div>
         </div>
       </div>

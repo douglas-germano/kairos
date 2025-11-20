@@ -15,7 +15,8 @@ from routes.swipes import swipes_bp
 from routes.tenants import tenants_bp
 from routes.vision import vision_bp
 from routes.voice import voice_bp
-from routes.web import web_bp
+from routes.ai import ai_bp
+
 
 # Importar configuração
 from config.logging_config import setup_logging, RequestContextFilter
@@ -29,7 +30,7 @@ app = Flask(__name__)
 CORS(app, 
      origins="*",
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-     allow_headers=["Content-Type", "Authorization"],
+     allow_headers=["Content-Type", "Authorization", "X-Tenant-ID"],
      supports_credentials=False)
 
 # Limiter
@@ -53,7 +54,8 @@ app.register_blueprint(swipes_bp)
 app.register_blueprint(tenants_bp)
 app.register_blueprint(vision_bp)
 app.register_blueprint(voice_bp)
-app.register_blueprint(web_bp)
+app.register_blueprint(ai_bp)
+
 
 # Error handlers
 @app.errorhandler(KairosException)

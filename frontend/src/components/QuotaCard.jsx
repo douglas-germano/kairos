@@ -34,7 +34,10 @@ const QuotaCard = () => {
     };
 
     const metrics = [
-        { key: 'api_calls_per_day', label: 'Chamadas API (Dia)' },
+        { key: 'api_calls_per_day', label: 'Chamadas API (Hoje)' },
+        { key: 'conversations', label: 'Conversas (Hoje)' },
+        { key: 'custom_ais', label: 'Agentes Personalizados' },
+        { key: 'projects', label: 'Projetos' },
     ];
 
     return (

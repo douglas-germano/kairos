@@ -53,11 +53,41 @@ class ConflictError(KairosException):
 
 class QuotaExceededError(KairosException):
     """Limite de quota excedido"""
-    def __init__(self):
+    
+    ACTION_MESSAGES = {
+        'api_calls_per_day': {
+            'title': 'Limite de chamadas diárias atingido',
+            'message': 'Você atingiu o limite de chamadas de API para hoje. Volte amanhã ou faça upgrade do seu plano para continuar usando.',
+        },
+        'conversations': {
+            'title': 'Limite de conversas diárias atingido',
+            'message': 'Você atingiu o limite de novas conversas para hoje. Volte amanhã ou faça upgrade do seu plano para criar mais conversas.',
+        },
+        'custom_ais': {
+            'title': 'Limite de agentes atingido',
+            'message': 'Você atingiu o limite de agentes personalizados. Delete um agente existente ou faça upgrade do seu plano para criar mais.',
+        },
+        'projects': {
+            'title': 'Limite de projetos atingido',
+            'message': 'Você atingiu o limite de projetos. Delete um projeto existente ou faça upgrade do seu plano para criar mais.',
+        },
+    }
+    
+    def __init__(self, action: str = None):
+        action_info = self.ACTION_MESSAGES.get(action, {
+            'title': 'Limite de quota excedido',
+            'message': 'Você atingiu um limite do seu plano. Faça upgrade para continuar usando todos os recursos.'
+        })
+        
         super().__init__(
-            'Limite de quota diária excedido',
+            action_info['message'],
             'QUOTA_EXCEEDED',
-            429
+            429,
+            details={
+                'title': action_info['title'],
+                'action': action,
+                'upgrade_url': '/plans'
+            }
         )
 
 class RateLimitError(KairosException):

@@ -12,13 +12,14 @@ import Projects from './pages/Projects'
 import Swipes from './pages/Swipes'
 import Profile from './pages/Profile'
 import Conversations from './pages/Conversations'
-import TenantMembers from './pages/TenantMembers'
+
 import Create from './pages/Create'
 import DocumentEditor from './pages/DocumentEditor'
 import Agents from './pages/Agents'
 import AgentsCreate from './pages/AgentsCreate'
+import AgentsEdit from './pages/AgentsEdit'
 import ProjectFiles from './pages/ProjectFiles'
-import Web from './pages/Web'
+
 import Images from './pages/Images'
 import Plans from './pages/Plans'
 
@@ -119,13 +120,14 @@ function App() {
             }
           />
           <Route
-            path="/web"
+            path="/agents/:agentId/edit"
             element={
               <PrivateRoute>
-                <Web />
+                <AgentsEdit />
               </PrivateRoute>
             }
           />
+
           <Route
             path="/images"
             element={
@@ -158,14 +160,7 @@ function App() {
               </PrivateRoute>
             }
           />
-          <Route
-            path="/tenants/:tenantId/members"
-            element={
-              <PrivateRoute>
-                <TenantMembers />
-              </PrivateRoute>
-            }
-          />
+
           <Route path="/" element={<Navigate to="/chat" />} />
         </Routes>
       </Router>

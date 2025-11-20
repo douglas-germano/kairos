@@ -198,9 +198,11 @@ export const visionAPI = {
   analyze: (data) => api.post('/api/v1/vision/analyze', data),
 }
 
-export const webAPI = {
-  search: (data) => api.post('/api/v1/web/search', data),
-  visit: (data) => api.post('/api/v1/web/visit', data),
+export const aiAPI = {
+  improveText: (text) => api.post('/api/v1/ai/improve-text', { text }),
+  continueWriting: (context) => api.post('/api/v1/ai/continue-writing', { context }),
+  summarize: (text) => api.post('/api/v1/ai/summarize', { text }),
+  translate: (text, target_language) => api.post('/api/v1/ai/translate', { text, target_language }),
 }
 
 export const voiceAPI = {

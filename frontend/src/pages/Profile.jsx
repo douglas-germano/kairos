@@ -234,7 +234,6 @@ export default function Profile() {
                           ) : (
                             <>
                               <Button variant="secondary" onClick={() => { setEditingOrgId(o.id); setEditingOrgName(o.nome) }}>Editar</Button>
-                              <Button variant="secondary" onClick={() => navigate(`/tenants/${o.id}/members`)}>Membros</Button>
                             </>
                           )}
                         </div>
