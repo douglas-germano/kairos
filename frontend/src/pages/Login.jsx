@@ -9,7 +9,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  
+
   const { login } = useAuth()
   const navigate = useNavigate()
 
@@ -19,13 +19,13 @@ export default function Login() {
     setLoading(true)
 
     const result = await login(email, password)
-    
+
     if (result.success) {
       navigate('/chat')
     } else {
       setError(result.error)
     }
-    
+
     setLoading(false)
   }
 
@@ -57,15 +57,24 @@ export default function Login() {
               required
             />
 
+            <div className="flex justify-end">
+              <Link
+                to="/forgot-password"
+                className="text-small text-primary hover:text-primary-dark"
+              >
+                Esqueci minha senha
+              </Link>
+            </div>
+
             {error && (
               <div className="text-small text-red-500 bg-red-50 dark:bg-red-900/20 p-3 rounded-md">
                 {error}
               </div>
             )}
 
-            <Button 
-              type="submit" 
-              className="w-full" 
+            <Button
+              type="submit"
+              className="w-full"
               disabled={loading}
             >
               {loading ? 'Entrando...' : 'Entrar'}
@@ -75,8 +84,8 @@ export default function Login() {
           <div className="mt-6 text-center">
             <p className="text-caption text-neutral-text-secondary">
               Não tem uma conta?{' '}
-              <Link 
-                to="/register" 
+              <Link
+                to="/register"
                 className="text-primary hover:text-primary-dark font-semibold"
               >
                 Criar conta

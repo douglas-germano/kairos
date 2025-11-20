@@ -4,6 +4,9 @@ import useAuth from './contexts/useAuth'
 import Layout from './components/Layout'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import ForgotPassword from './pages/ForgotPassword'
+import VerifyCode from './pages/VerifyCode'
+import ResetPassword from './pages/ResetPassword'
 import Chat from './pages/Chat'
 import Projects from './pages/Projects'
 import Swipes from './pages/Swipes'
@@ -40,6 +43,9 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/verify-code" element={<VerifyCode />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route
             path="/chat"
             element={

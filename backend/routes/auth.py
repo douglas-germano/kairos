@@ -13,6 +13,10 @@ from models.exceptions import (
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import logging
+import random
+import string
+from datetime import datetime, timedelta, timezone
+from utils.email_client import send_recovery_email
 
 logger = logging.getLogger(__name__)
 
@@ -176,3 +180,124 @@ def get_user(user_id):
     except Exception as e:
         logger.error(f'Error fetching user: {str(e)}', extra={'user_id': user_id})
         raise
+
+@auth_bp.route('/forgot-password', methods=['POST'])
+@require_json
+@handle_exceptions
+@limiter.limit("3 per hour")
+def forgot_password():
+    """
+    Solicita recuperação de senha.
+    Body: { "email": "..." }
+    """
+    data = request.json
+    email = data.get('email', '').lower().strip()
+    
+    if not email:
+        raise ValidationError('Email é obrigatório')
+
+    # Verificar se usuário existe
+    user = supabase.table('users').select('id').eq('email', email).execute()
+    if not user.data:
+        raise ValidationError('Email não cadastrado')
+
+    # Gerar código de 6 dígitos
+    code = ''.join(random.choices(string.digits, k=6))
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
+
+    # Salvar no banco
+    supabase.table('password_resets').insert({
+        'email': email,
+        'code': code,
+        'expires_at': expires_at.isoformat()
+    }).execute()
+
+    # Enviar email
+    if send_recovery_email(email, code):
+        return jsonify({'message': 'Código enviado com sucesso'}), 200
+    else:
+        raise Exception('Erro ao enviar email')
+
+@auth_bp.route('/verify-code', methods=['POST'])
+@require_json
+@handle_exceptions
+@limiter.limit("5 per minute")
+def verify_code():
+    """
+    Verifica código de recuperação.
+    Body: { "email": "...", "code": "..." }
+    """
+    data = request.json
+    email = data.get('email', '').lower().strip()
+    code = data.get('code', '').strip()
+
+    if not email or not code:
+        raise ValidationError('Email e código são obrigatórios')
+
+    # Buscar código válido
+    res = supabase.table('password_resets') \
+        .select('*') \
+        .eq('email', email) \
+        .eq('code', code) \
+        .gt('expires_at', datetime.now(timezone.utc).isoformat()) \
+        .order('created_at', desc=True) \
+        .limit(1) \
+        .execute()
+
+    if not res.data:
+        raise ValidationError('Código inválido ou expirado')
+
+    return jsonify({'message': 'Código válido', 'valid': True}), 200
+
+@auth_bp.route('/reset-password', methods=['POST'])
+@require_json
+@handle_exceptions
+@limiter.limit("3 per hour")
+def reset_password():
+    """
+    Redefine a senha.
+    Body: { "email": "...", "code": "...", "new_password": "..." }
+    """
+    data = request.json
+    email = data.get('email', '').lower().strip()
+    code = data.get('code', '').strip()
+    new_password = data.get('new_password', '')
+
+    if not email or not code or not new_password:
+        raise ValidationError('Todos os campos são obrigatórios')
+
+    if len(new_password) < 6:
+        raise ValidationError('A senha deve ter no mínimo 6 caracteres')
+
+    # Verificar código novamente
+    res = supabase.table('password_resets') \
+        .select('*') \
+        .eq('email', email) \
+        .eq('code', code) \
+        .gt('expires_at', datetime.now(timezone.utc).isoformat()) \
+        .order('created_at', desc=True) \
+        .limit(1) \
+        .execute()
+
+    if not res.data:
+        raise ValidationError('Código inválido ou expirado')
+
+    # Hash da nova senha
+    password_hash = hash_password(new_password)
+
+    # Atualizar usuário
+    update = supabase.table('users') \
+        .update({'password_hash': password_hash}) \
+        .eq('email', email) \
+        .execute()
+
+    if not update.data:
+        raise Exception('Erro ao atualizar senha')
+
+    # Invalidar códigos usados (opcional, mas recomendado)
+    supabase.table('password_resets') \
+        .delete() \
+        .eq('email', email) \
+        .execute()
+
+    return jsonify({'message': 'Senha redefinida com sucesso'}), 200

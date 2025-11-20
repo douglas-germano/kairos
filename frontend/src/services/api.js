@@ -94,6 +94,9 @@ export const authAPI = {
   updateUser: (userId, data) => api.put(`/api/v1/auth/user/${userId}`, data),
   deleteUser: (userId) => api.delete(`/api/v1/auth/user/${userId}`),
   changePassword: (userId, data) => api.put(`/api/v1/auth/user/${userId}/password`, data),
+  forgotPassword: (data) => api.post('/api/v1/auth/forgot-password', data),
+  verifyCode: (data) => api.post('/api/v1/auth/verify-code', data),
+  resetPassword: (data) => api.post('/api/v1/auth/reset-password', data),
 }
 
 // Projects
