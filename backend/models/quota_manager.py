@@ -11,14 +11,14 @@ class QuotaManager:
 
     LIMITS_BY_PLAN = {
         'free': {
-            'api_calls_per_day': 100,
+            'api_calls_per_day': 1000,
             'conversations': 10,
             'custom_ais': 2,
             'projects': 5,
             'swipes': 50,
             'messages_per_conversation': 50,
         },
-        'pro': {
+        'light': {
             'api_calls_per_day': 10000,
             'conversations': 1000,
             'custom_ais': 50,
@@ -26,7 +26,7 @@ class QuotaManager:
             'swipes': 5000,
             'messages_per_conversation': 5000,
         },
-        'enterprise': {
+        'pro': {
             'api_calls_per_day': 999999,
             'conversations': 999999,
             'custom_ais': 999999,

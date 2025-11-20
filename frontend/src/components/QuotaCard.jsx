@@ -35,19 +35,15 @@ const QuotaCard = () => {
 
     const metrics = [
         { key: 'api_calls_per_day', label: 'Chamadas API (Dia)' },
-        { key: 'conversations', label: 'Conversas Totais' },
-        { key: 'messages_per_conversation', label: 'Msgs/Conversa' },
-        { key: 'custom_ais', label: 'IAs Personalizadas' },
-        { key: 'projects', label: 'Projetos' },
     ];
 
     return (
         <div className="bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-700">
             <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-bold text-white">Uso do Plano</h3>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${plan === 'pro' ? 'bg-purple-500/20 text-purple-400' :
-                        plan === 'enterprise' ? 'bg-blue-500/20 text-blue-400' :
-                            'bg-gray-600/20 text-gray-400'
+                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${plan === 'light' ? 'bg-purple-500/20 text-purple-400' :
+                    plan === 'pro' ? 'bg-blue-500/20 text-blue-400' :
+                        'bg-gray-600/20 text-gray-400'
                     }`}>
                     {plan}
                 </span>
@@ -71,8 +67,8 @@ const QuotaCard = () => {
                             <div className="w-full bg-gray-700 rounded-full h-2.5 overflow-hidden">
                                 <div
                                     className={`h-2.5 rounded-full transition-all duration-500 ${percent > 90 ? 'bg-red-500' :
-                                            percent > 70 ? 'bg-yellow-500' :
-                                                'bg-green-500'
+                                        percent > 70 ? 'bg-yellow-500' :
+                                            'bg-green-500'
                                         }`}
                                     style={{ width: `${isUnlimited ? 100 : percent}%`, opacity: isUnlimited ? 0.3 : 1 }}
                                 ></div>
